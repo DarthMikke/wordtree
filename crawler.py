@@ -282,8 +282,8 @@ def main():
             django_child.save()
 
         return django_word
-    
-    app = App("wordtree/crawler_state.json")
+
+    app = App("wordtree/crawler_config.json")
     for i in range(10):
         try:
             article = app.load_next_url()
