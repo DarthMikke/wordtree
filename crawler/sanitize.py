@@ -21,7 +21,7 @@ if __name__ == "__main__":
         langs = Language.objects.filter(name__endswith=x)
         for lang in langs:
             old = lang.name
-            new = lang.name[:len(x)]
+            new = lang.name[:-len(x)]
             print(f"{old} -> {new}")
             lang.name = new
 
