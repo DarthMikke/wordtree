@@ -30,6 +30,8 @@ if __name__ == "__main__":
             if ok == "y":
                 for lang in langs:
                     lang.save()
-            print("Saved.")
+                print("Saved.")
+            else:
+                print("Aborted.")
         else:
             print(f"No changes to make at `{x}`.")
