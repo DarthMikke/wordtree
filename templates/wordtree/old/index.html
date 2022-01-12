@@ -1,0 +1,13 @@
+{% extends "wordtree/base.html" %}
+
+{% block content %}
+<h1>Word tree</h1>
+<form action="{% url 'word_tree' %}" method="get">
+	{{ form }}
+	<input type="submit" value="Submit">
+</form>
+
+{% block side %}
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,264 @@
+[
+  {
+    "model": "wordtree.language",
+    "pk": 1,
+    "fields": {
+      "short_name": "da",
+      "name": "Danish"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 2,
+    "fields": {
+      "short_name": "en",
+      "name": "English"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 3,
+    "fields": {
+      "short_name": "fo",
+      "name": "Faroese"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 4,
+    "fields": {
+      "short_name": "ine-pro",
+      "name": "Proto-Indo-European"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 5,
+    "fields": {
+      "short_name": "gem-pro",
+      "name": "Proto-Germanic"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 6,
+    "fields": {
+      "short_name": "gwm-pro",
+      "name": "Proto-West-Germanic"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 7,
+    "fields": {
+      "short_name": "ang",
+      "name": "Old English"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 8,
+    "fields": {
+      "short_name": "gmq-osw",
+      "name": "Old Swedish"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 9,
+    "fields": {
+      "short_name": "sv",
+      "name": "Swedish"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 10,
+    "fields": {
+      "short_name": "enm",
+      "name": "Middle English"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 11,
+    "fields": {
+      "short_name": "is",
+      "name": "Icelandic"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 12,
+    "fields": {
+      "short_name": "non",
+      "name": "Old Norse"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 13,
+    "fields": {
+      "short_name": "nn",
+      "name": "Norwegian Nynorsk"
+    }
+  },
+  {
+    "model": "wordtree.language",
+    "pk": 14,
+    "fields": {
+      "short_name": "nb",
+      "name": "Norwegian Bokm\u00e5l"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "*ainaz",
+      "reconstructed": true,
+      "parent": 1,
+      "language": 5
+    }
+  },
+  {
+    "pk": 3,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "*ain",
+      "reconstructed": true,
+      "parent": 2,
+      "language": 6
+    }
+  },
+  {
+    "pk": 4,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "\u0101n",
+      "reconstructed": false,
+      "parent": 3,
+      "language": 7
+    }
+  },
+  {
+    "pk": 5,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "oon",
+      "reconstructed": false,
+      "parent": 4,
+      "language": 10
+    }
+  },
+  {
+    "pk": 6,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "one",
+      "reconstructed": false,
+      "parent": 5,
+      "language": 2
+    }
+  },
+  {
+    "pk": 7,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "an",
+      "reconstructed": false,
+      "parent": 5,
+      "language": 2
+    }
+  },
+  {
+    "pk": 8,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "a",
+      "reconstructed": false,
+      "parent": 5,
+      "language": 2
+    }
+  },
+  {
+    "pk": 9,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "einn",
+      "reconstructed": false,
+      "parent": 2,
+      "language": 12
+    }
+  },
+  {
+    "pk": 10,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "einn",
+      "reconstructed": false,
+      "parent": 9,
+      "language": 11
+    }
+  },
+  {
+    "pk": 11,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "ein",
+      "reconstructed": false,
+      "parent": 9,
+      "language": 13
+    }
+  },
+  {
+    "pk": 12,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "en",
+      "reconstructed": false,
+      "parent": 9,
+      "language": 1
+    }
+  },
+  {
+    "pk": 13,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "en",
+      "reconstructed": false,
+      "parent": 12,
+      "language": 14
+    }
+  },
+  {
+    "pk": 14,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "\u0113n",
+      "reconstructed": false,
+      "parent": 9,
+      "language": 8
+    }
+  },
+  {
+    "pk": 15,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "en",
+      "reconstructed": false,
+      "parent": 14,
+      "language": 9
+    }
+  },
+  {
+    "pk": 1,
+    "model": "wordtree.word",
+    "fields": {
+      "text": "root",
+      "reconstructed": true,
+      "parent": 1,
+      "language": 1
+    }
+  }
+]

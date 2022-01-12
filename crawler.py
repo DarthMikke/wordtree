@@ -1,0 +1,319 @@
+#!/usr/bin/env python3.9
+import os
+import sys
+import django
+import json
+
+from urllib.parse import urlsplit, urlunsplit, urlparse, quote
+from urllib.request import urlopen
+from bs4 import BeautifulSoup as Soup
+
+sys.path.append(os.getcwd())
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wordtree_server.settings')
+print(os.getcwd())
+django.setup()
+
+import wordtree.models as models
+
+
+class Logger:
+    def __init__(self, logfile):
+        self.logfile = logfile
+
+    def log(self, x):
+        with open(self.logfile, "a") as fh:
+            fh.write(f"\n{x}")
+
+
+class Word:
+    def __init__(self, word, language, language_full="Unknown", romanized=None):
+        self.word = word
+        self.romanized = romanized
+        self.language = language
+        self.language_full = language_full
+        self.children = []
+
+    def add_child(self, child):
+        print(f"{self} -> {child}")
+        if type(child) != type(self):
+            raise TypeError("Not a word.")
+        if child == self:
+            raise ValueError("Can't self-reference.")
+
+        self.children.append(child)
+
+    def tree(self):
+        if len(self.children) == 0:
+            return str(self)
+        trees = [str(x.tree()) for x in self.children]
+        trees = "\n".join(trees)
+        trees = ["  " + str(x) for x in trees.splitlines()]
+        return str(self) + "\n" + "\n".join(trees)
+
+    def __repr__(self):
+        return f"<{str(self)})>"
+
+    def __str__(self):
+        word = f"{self.word}"
+        if not(self.romanized == self.word or self.romanized is None):
+            word = f"{self.word}/{self.romanized}"
+        return f"{word} ({self.language}/{self.language_full})"
+
+
+class Article:
+    def __init__(self, url):
+        self.url = url
+
+        html = None
+        with urlopen(url) as fh:
+            try:
+                html = fh.read()
+            except Exception as e:
+                raise e
+
+        soup = Soup(html, "lxml")
+        self.title = soup.head.title.text
+        self.sections = Article.split_to_sections(soup)
+
+    def split_to_sections(soup):
+        h2s = soup.find_all("h2")
+        sections = []
+
+        for x in h2s:
+            header = x
+            content = []
+            cur = header.next_sibling
+            while cur is not None:
+                content.append(cur)
+                cur = cur.next_sibling
+            sections.append({"header": header, "content": content})
+        return sections
+
+    def find_roots(self):
+        roots = []
+        i = 0
+
+        while i < len(self.sections):
+            section = self.sections[i]
+            j = 0
+            found_h3 = False
+            seek = True
+            while seek and j<len(section['content']):
+                cur = section['content'][j]
+                if cur.name == "h3":
+                    found_h3 = True
+                elif found_h3:
+                    if cur.name == "p":
+                        if not cur.next is None:
+                            if cur.next.name is not None and cur.next.has_attr("lang"):
+                                seek = False
+                                break
+                            else:
+                                found_h3 = False
+                    elif cur.name is not None and cur.name != "p":
+                        found_h3 = False
+                j += 1
+            if not seek:
+                word = tag_to_word(cur)
+                word.language_full = section['header'].text
+                roots.append({'word': word, "in_section": i})
+            i += 1
+
+        return roots
+
+
+def tag_to_word(tag):
+    """
+    Wiktionary words are expressed as:
+    [<arrow>] [<Full language name>: ] <word> [(<romanized word>)]
+    """
+    word = None
+    language = None
+    language_full = None
+    romanized = None
+    cur = tag.next
+    while True:
+        if cur is None:
+            # print("")
+            break
+        # print(cur, repr(cur.name), end='')
+        if cur.name is None:
+            if language_full is None:
+                # print(", saved as `language_full`")
+                language_full = cur.text
+        else:
+            if cur.has_attr("lang"):
+                # print("lang:", cur['lang'])
+                if cur.has_attr("class"):
+                    # print("class:", cur['class'])
+                    if "tr" in cur['class']:
+                        # print(", saved as `romanized`")
+                        romanized = cur.text
+                    else:
+                        # print(", saved as `word`")
+                        language = cur['lang']
+                        # print(f"{language} saved as `language`")
+                        word = cur.text
+                else:
+                    word = cur.text
+            else:
+                if cur.has_attr("class"):
+                    # print("class:", cur['class'])
+                    if "desc-arr" in cur['class']:
+                        # print(", recognized as `arrow`")
+                        pass
+        cur = cur.next_sibling
+    return Word(word, language, language_full, romanized)
+
+
+class App:
+    def __init__(self, state_uri):
+        self.state_uri = state_uri
+        with open(state_uri) as fh:
+            state_text = fh.read()
+            self.state = json.loads(state_text)
+
+        if not 'logfile' in self.state.keys():
+            self.state['logfile'] = './crawler.log'
+        
+        self.logger = Logger(self.state['logfile'])
+
+        with open(self.state['file_base'].format(self.state['file_id'])) as fh:
+            self.urls = [f"https://en.wiktionary.org{url}" for url in fh.read().splitlines()]
+        
+        self.write_state()
+
+    def write_state(self):
+        with open(self.state_uri, "w") as fh:
+            fh.write(json.dumps(self.state))
+
+    def next_url(self):
+        url = self.urls[self.state['line_no']]
+        # url = encode_url(url)
+        return url
+
+    def load_next_url(self):
+        self.state['line_no'] += 1
+        self.write_state()
+        url = self.next_url()
+        article = Article(url)
+        self.logger.log(f"OK: {url}")
+        return article
+
+
+# https://stackoverflow.com/questions/22734464/unicodeencodeerror-ascii-codec-cant-encode-character-xe9-when-using-ur
+def encode_url(raw_url):
+    url = urlparse(raw_url)._asdict()
+    url["path"] = quote(url["path"])
+    return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
+
+
+def ul_to_words(ul):
+    #print(f"Analyzing ul starting with {ul.text[:40]}")
+    words = []
+
+    ul = list(ul.find_all("li", recursive=False))
+    for li in ul:
+        #span = li.span
+        #if span is None:
+        #    print("This ul doesn't contain a word tree.")
+        #    continue
+        #
+        #if not span.has_attr("class"):
+        #    print("This ul doesn't contain a word tree.")
+        #    continue
+        #
+        #if "desc-arr" in span["class"]:
+        #    span = span.find_next("span", recursive=False)
+        #
+        #if not span.has_attr("lang"):
+        #    print("This ul doesn't contain a word tree.")
+        #    continue
+        #language = span["lang"]
+        #word = Word(span.text, language, span.previous.text)
+        word = tag_to_word(li)
+
+        child_ul = li.find_all("ul", recursive=False)
+        if len(child_ul) > 0:
+            child_ul = child_ul[0]
+            #ul_to_words(child_ul, word)
+            for child_word in ul_to_words(child_ul):
+                try:
+                    word.add_child(child_word)
+                except Exception as e:
+                    app.logger.log(f"Fail: {e}")
+
+        words.append(word)
+
+    return words
+
+
+def word_to_django_word(word: Word, source: str=""):
+    language = None
+    try:
+        language = models.Language.objects.get(short_name=word.language)
+    except:
+        language = models.Language.objects.create(short_name=word.language, name=word.language_full)
+
+    django_word = None
+    try:
+        django_word = models.Word.objects.get(text=word.word, language=language)
+        print(f"{word} exists already")
+    except:
+        django_word = models.Word.objects.create(
+                text=word.word,
+                romanized="" if word.romanized is None else word.romanized,
+                language=language,
+                parent=models.Word.objects.get(id=1),
+                source=source)
+    
+    for child in word.children:
+        django_child = word_to_django_word(child, source)
+        django_child.parent = django_word
+        django_child.save()
+
+    return django_word
+
+
+def main():
+    app = App("wordtree/crawler_state.json")
+    for i in range(10):
+        try:
+            article = app.load_next_url()
+        except Exception as e:
+            app.logger.log(f"Fail: {e}")
+            continue
+
+        print(article.title)
+        try:
+            roots = article.find_roots()
+        except Exception as e:
+            app.logger.log(f"Fail: {e}")
+            continue
+
+        #roots = find_roots(soup) # Word("þaką", "gem-pro")
+        if len(roots) == 0:
+            return -3
+        for root in roots:
+            print(f"Found root {root['word']}")
+
+            uls = [x for x in article.sections[root['in_section']]['content'] if x.name == "ul"]
+            if len(uls) < 1:
+                print("No descendants found.")
+                continue
+            ul = uls[0]
+            tree = ul_to_words(ul)
+            # print(tree)
+            for x in tree:
+                root['word'].add_child(x)
+        try:
+            word_to_django_word(root['word'], source=article.url)
+        except Exception as e:
+            app.logger.log(f"Fail: {e}")
+            continue
+
+    return 0
+
+if __name__ == "__main__":
+    #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
+    exit(main())

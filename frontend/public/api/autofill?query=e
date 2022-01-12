@@ -1,0 +1,25 @@
+{
+  "suggestions": [
+    {
+		  "word": "einn",
+      "latin": "",
+      "language": "is",
+      "language_full": "Icelandic",
+      "id": 2
+		},
+    {
+      "word": "ein",
+      "latin": "",
+      "language": "nno",
+      "language_full": "Norwegian (Nynorsk)",
+      "id": 3
+    },
+    {
+      "word": "en",
+      "latin": "",
+      "language": "nob",
+      "language_full": "Norwegian (Bokmål)",
+      "id": 4
+    }
+  ]
+}
