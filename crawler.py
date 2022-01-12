@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup as Soup
 
 sys.path.append(os.getcwd())
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wordtree_server.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'{os.path.split(os.getcwd())[-1]}.settings')
 print(os.getcwd())
 django.setup()
 
