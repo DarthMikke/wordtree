@@ -167,7 +167,7 @@ def tag_to_word(tag):
 
 
 class App:
-    
+    logmessage = "Encountered error. Check log file for details."
     def __init__(self, state_uri):
         self.state_uri = state_uri
         if not os.path.isfile(state_uri):
@@ -246,7 +246,8 @@ def ul_to_words(ul):
                 try:
                     word.add_child(child_word)
                 except Exception as e:
-                    app.logger.log(f"Fail: {e}")
+                    print(app.logmessage)
+                    app.logger.log(f"Fail 1: {e}")
 
         words.append(word)
 
@@ -264,6 +265,7 @@ def word_to_django_word(word: Word, source: str=""):
     try:
         django_word = models.Word.objects.get(text=word.word, language=language)
         print(f"{word} exists already")
+        app.logger.log(f"{word} not added, exists already.")
     except:
         django_word = models.Word.objects.create(
                 text=word.word,
@@ -271,6 +273,7 @@ def word_to_django_word(word: Word, source: str=""):
                 language=language,
                 parent=models.Word.objects.get(id=1),
                 source=source)
+        app.logger.log(f"{word} added successfully.")
     
     for child in word.children:
         django_child = word_to_django_word(child, source)
@@ -286,14 +289,16 @@ def main():
         try:
             article = app.load_next_url()
         except Exception as e:
-            app.logger.log(f"Fail: {e}")
+            print(app.logmessage)
+            app.logger.log(f"Fail 2: {e}")
             continue
 
         print(article.title)
         try:
             roots = article.find_roots()
         except Exception as e:
-            app.logger.log(f"Fail: {e}")
+            print(app.logmessage)
+            app.logger.log(f"Fail 3: {e}")
             continue
 
         #roots = find_roots(soup) # Word("þaką", "gem-pro")
@@ -314,7 +319,8 @@ def main():
         try:
             word_to_django_word(root['word'], source=article.url)
         except Exception as e:
-            app.logger.log(f"Fail: {e}")
+            print(app.logmessage)
+            app.logger.log(f"Fail 4: {e}")
             continue
 
     return 0
