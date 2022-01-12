@@ -20,9 +20,9 @@ class Logger:
     def __init__(self, logfile):
         self.logfile = logfile
 
-    def log(self, x):
+    def log(self, x, end='\n'):
         with open(self.logfile, "a") as fh:
-            fh.write(f"\n{x}")
+            fh.write(f"{x}{end}")
 
 
 class Word:
@@ -181,18 +181,26 @@ class App:
         if not 'logfile' in self.state.keys():
             self.state['logfile'] = './crawler.log'
         
+        self.load_urls()
         self.logger = Logger(self.state['logfile'])
-
-        with open(self.state['file_base'].format(self.state['file_id'])) as fh:
-            self.urls = [f"https://en.wiktionary.org{url}" for url in fh.read().splitlines()]
         
         self.write_state()
+
+    def load_urls(self):
+        with open(self.state['file_base'].format(self.state['file_id'])) as fh:
+            self.urls = [f"https://en.wiktionary.org{url}" for url in fh.read().splitlines()]
 
     def write_state(self):
         with open(self.state_uri, "w") as fh:
             fh.write(json.dumps(self.state))
+            fh.write("\n")
 
     def next_url(self):
+        if self.state['line_no'] >= len(self.urls):
+            self.state['file_id'] += 1
+            self.state['line_no'] = 0
+            self.load_urls()
+
         url = self.urls[self.state['line_no']]
         # url = encode_url(url)
         return url
@@ -283,7 +291,7 @@ def main():
 
         return django_word
 
-    app = App("wordtree/crawler_config.json")
+    app = App("wordtree/crawler/crawler_config.json")
     for i in range(10):
         try:
             article = app.load_next_url()
