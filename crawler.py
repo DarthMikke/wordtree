@@ -213,83 +213,82 @@ def encode_url(raw_url):
     return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
 
 
-def ul_to_words(ul):
-    #print(f"Analyzing ul starting with {ul.text[:40]}")
-    words = []
-
-    ul = list(ul.find_all("li", recursive=False))
-    for li in ul:
-        #span = li.span
-        #if span is None:
-        #    print("This ul doesn't contain a word tree.")
-        #    continue
-        #
-        #if not span.has_attr("class"):
-        #    print("This ul doesn't contain a word tree.")
-        #    continue
-        #
-        #if "desc-arr" in span["class"]:
-        #    span = span.find_next("span", recursive=False)
-        #
-        #if not span.has_attr("lang"):
-        #    print("This ul doesn't contain a word tree.")
-        #    continue
-        #language = span["lang"]
-        #word = Word(span.text, language, span.previous.text)
-        word = tag_to_word(li)
-
-        child_ul = li.find_all("ul", recursive=False)
-        if len(child_ul) > 0:
-            child_ul = child_ul[0]
-            #ul_to_words(child_ul, word)
-            for child_word in ul_to_words(child_ul):
-                try:
-                    word.add_child(child_word)
-                except Exception as e:
-                    print(app.logmessage)
-                    app.logger.log(f"Fail 1: {e}")
-
-        words.append(word)
-
-    return words
-
-
-def word_to_django_word(word: Word, source: str=""):
-    language = None
-    try:
-        language = models.Language.objects.get(short_name=word.language)
-    except:
-        language = models.Language.objects.create(short_name=word.language, name=word.language_full)
-
-    django_word = None
-    try:
-        django_word = models.Word.objects.get(text=word.word, language=language)
-        print(f"{word} exists already")
-        app.logger.log(f"{word} not added, exists already.")
-    except:
-        django_word = models.Word.objects.create(
-                text=word.word,
-                romanized="" if word.romanized is None else word.romanized,
-                language=language,
-                parent=models.Word.objects.get(id=1),
-                source=source)
-        app.logger.log(f"{word} added successfully.")
-    
-    for child in word.children:
-        django_child = word_to_django_word(child, source)
-        django_child.parent = django_word
-        django_child.save()
-
-    return django_word
-
-
 def main():
+    def ul_to_words(ul):
+        #print(f"Analyzing ul starting with {ul.text[:40]}")
+        words = []
+
+        ul = list(ul.find_all("li", recursive=False))
+        for li in ul:
+            #span = li.span
+            #if span is None:
+            #    print("This ul doesn't contain a word tree.")
+            #    continue
+            #
+            #if not span.has_attr("class"):
+            #    print("This ul doesn't contain a word tree.")
+            #    continue
+            #
+            #if "desc-arr" in span["class"]:
+            #    span = span.find_next("span", recursive=False)
+            #
+            #if not span.has_attr("lang"):
+            #    print("This ul doesn't contain a word tree.")
+            #    continue
+            #language = span["lang"]
+            #word = Word(span.text, language, span.previous.text)
+            word = tag_to_word(li)
+
+            child_ul = li.find_all("ul", recursive=False)
+            if len(child_ul) > 0:
+                child_ul = child_ul[0]
+                #ul_to_words(child_ul, word)
+                for child_word in ul_to_words(child_ul):
+                    try:
+                        word.add_child(child_word)
+                    except Exception as e:
+                        print(App.logmessage)
+                        app.logger.log(f"Fail 1: {e}")
+
+            words.append(word)
+
+        return words
+
+
+    def word_to_django_word(word: Word, source: str=""):
+        language = None
+        try:
+            language = models.Language.objects.get(short_name=word.language)
+        except:
+            language = models.Language.objects.create(short_name=word.language, name=word.language_full)
+
+        django_word = None
+        try:
+            django_word = models.Word.objects.get(text=word.word, language=language)
+            print(f"{word} exists already")
+            app.logger.log(f"{word} not added, exists already.")
+        except:
+            django_word = models.Word.objects.create(
+                    text=word.word,
+                    romanized="" if word.romanized is None else word.romanized,
+                    language=language,
+                    parent=models.Word.objects.get(id=1),
+                    source=source)
+            app.logger.log(f"{word} added successfully.")
+        
+        for child in word.children:
+            django_child = word_to_django_word(child, source)
+            django_child.parent = django_word
+            django_child.save()
+
+        return django_word
+    
     app = App("wordtree/crawler_state.json")
     for i in range(10):
         try:
             article = app.load_next_url()
         except Exception as e:
-            print(app.logmessage)
+            print(App.logmessage)
             app.logger.log(f"Fail 2: {e}")
             continue
 
@@ -297,7 +296,7 @@ def main():
         try:
             roots = article.find_roots()
         except Exception as e:
-            print(app.logmessage)
+            print(App.logmessage)
             app.logger.log(f"Fail 3: {e}")
             continue
 
@@ -319,7 +318,7 @@ def main():
         try:
             word_to_django_word(root['word'], source=article.url)
         except Exception as e:
-            print(app.logmessage)
+            print(App.logmessage)
             app.logger.log(f"Fail 4: {e}")
             continue
 
