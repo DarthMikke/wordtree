@@ -140,7 +140,7 @@ def tag_to_word(tag):
         if cur.name is None:
             if language_full is None:
                 # print(", saved as `language_full`")
-                language_full = cur.text
+                language_full = cur.string
         else:
             if cur.has_attr("lang"):
                 # print("lang:", cur['lang'])
