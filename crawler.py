@@ -167,8 +167,13 @@ def tag_to_word(tag):
 
 
 class App:
+    
     def __init__(self, state_uri):
         self.state_uri = state_uri
+        if not os.path.isfile(state_uri):
+            self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/urls-{}.txt", "logfile": "./crawler.log"}
+            self.write_state()
+
         with open(state_uri) as fh:
             state_text = fh.read()
             self.state = json.loads(state_text)
