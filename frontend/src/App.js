@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import SearchForm from './SearchForm.js';
+import _ from './i18n.js';
 
 class App extends Component {
   constructor(props) {
@@ -8,7 +9,8 @@ class App extends Component {
     this.state = {
       search: "",
       typing: false,
-      selected: []
+      selected: [],
+      lang: 'nn',
     }
     this.select = this.select.bind(this);
     this.unselect = this.unselect.bind(this);
@@ -39,16 +41,24 @@ class App extends Component {
       let pk_query = `image/${this.state.selected.map((x) => x.id)
         .reduce((a, b) => a.toString() + "," + b.toString())
       }.png`;
-      image = <img src={pk_query} alt="Genealogical tree" />;
+      image = <img style={{maxWidth: "100%"}} src={pk_query} alt="Genealogical tree" />;
     } else {
-      selectedItems = "Vel eit ord frå lista til venstre";
+      selectedItems = _('Choose a word from list to the left', this.state.lang);
     }
     return (
-      <div className="container-sm px-4 p-5 pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-3 border shadow-lg">
-        <div className="row">
+      <div className="container-sm px-4 p-5 pb-0 pe-lg-0 pt-lg-5 align-middle rounded-3 border shadow-lg">
+        <div className="text-center row pb-3">
+          <p>
+          <span><a href="#" onClick={() => this.setState({lang: 'en'})}>🇬🇧See this in English</a></span>&nbsp;|&nbsp;
+          <span><a href="#" onClick={() => this.setState({lang: 'nn'})}>🇳🇴Sjå dette på norsk</a></span>
+          </p>
+        </div>
+        <h1>Wordtree</h1>
+        <div className="row mt-4">
           <div className="col-6">
             <SearchForm
               selected={ this.state.selected }
+              lang={this.state.lang}
               isEditing={ (state) => {this.setState({typing: state})} }
               onAdd={ (pk) => this.select(pk) } />
           </div>
@@ -58,6 +68,10 @@ class App extends Component {
             </p>
             {image}
           </div>
+        </div>
+        <div className="text-center row footer justify-content-center mb-2 mt-4 mute">
+          <p className="">{_('Copyright notice', this.state.lang)}</p>
+          <p>{_('Read more', this.state.lang)}</p>
         </div>
       </div>
     );
