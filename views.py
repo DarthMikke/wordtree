@@ -55,6 +55,9 @@ def search(request):
 
 
 def tree(request):
+	"""
+	This view is not used in the React app.
+	"""
 	word_pks = request.META['QUERY_STRING']
 	word_pks = [x.rstrip("&") for x in word_pks.split("words=")]
 	word_pks[-1] = word_pks[-1].split("&")[0]
