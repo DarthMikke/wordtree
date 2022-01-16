@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import _ from './i18n.js';
 
 export default class SearchForm extends Component {
   constructor(props) {
@@ -43,7 +44,7 @@ export default class SearchForm extends Component {
           id="query"
           value={this.state.input}
           onChange={this.handleInput}
-          placeholder="Søk etter eit ord her" />
+          placeholder={_('Type here to search', this.props.lang)} />
       </form>
       <div className="container">
         {words}
