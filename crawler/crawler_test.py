@@ -1,4 +1,4 @@
-from crawler import Word, Article, encode_url, tag_to_word, ul_to_words
+from crawler import Word, Article, encode_url, tag_to_word, main
 from bs4 import BeautifulSoup as Soup
 
 print("===")
@@ -59,6 +59,6 @@ art = Article(url)
 for root in art.find_roots():
 	print(root)
 	print(
-		[ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
+		[main.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
 	)
 

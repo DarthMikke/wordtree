@@ -221,7 +221,7 @@ def encode_url(raw_url):
     return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
 
 
-def main():
+class main:
     def ul_to_words(ul):
         #print(f"Analyzing ul starting with {ul.text[:40]}")
         words = []
@@ -251,7 +251,7 @@ def main():
             if len(child_ul) > 0:
                 child_ul = child_ul[0]
                 #ul_to_words(child_ul, word)
-                for child_word in ul_to_words(child_ul):
+                for child_word in main.ul_to_words(child_ul):
                     try:
                         word.add_child(child_word)
                     except Exception as e:
@@ -285,52 +285,53 @@ def main():
             app.logger.log(f"{word} added successfully.")
         
         for child in word.children:
-            django_child = word_to_django_word(child, source)
+            django_child = main.word_to_django_word(child, source)
             django_child.parent = django_word
             django_child.save()
 
         return django_word
 
-    app = App("wordtree/crawler/crawler_config.json")
-    for i in range(10):
-        try:
-            article = app.load_next_url()
-        except Exception as e:
-            print(App.logmessage)
-            app.logger.log(f"Fail 2: {e}")
-            continue
-
-        print(article.title)
-        try:
-            roots = article.find_roots()
-        except Exception as e:
-            print(App.logmessage)
-            app.logger.log(f"Fail 3: {e}")
-            continue
-
-        #roots = find_roots(soup) # Word("þaką", "gem-pro")
-        if len(roots) == 0:
-            return -3
-        for root in roots:
-            print(f"Found root {root['word']}")
-
-            uls = [x for x in article.sections[root['in_section']]['content'] if x.name == "ul"]
-            if len(uls) < 1:
-                print("No descendants found.")
+    def __init__(self):
+        app = App("wordtree/crawler/crawler_config.json")
+        for i in range(10):
+            try:
+                article = app.load_next_url()
+            except Exception as e:
+                print(App.logmessage)
+                app.logger.log(f"Fail 2: {e}")
                 continue
-            ul = uls[0]
-            tree = ul_to_words(ul)
-            # print(tree)
-            for x in tree:
-                root['word'].add_child(x)
-        try:
-            word_to_django_word(root['word'], source=article.url)
-        except Exception as e:
-            print(App.logmessage)
-            app.logger.log(f"Fail 4: {e}")
-            continue
 
-    return 0
+            print(article.title)
+            try:
+                roots = article.find_roots()
+            except Exception as e:
+                print(App.logmessage)
+                app.logger.log(f"Fail 3: {e}")
+                continue
+
+            #roots = find_roots(soup) # Word("þaką", "gem-pro")
+            if len(roots) == 0:
+                return -3
+            for root in roots:
+                print(f"Found root {root['word']}")
+
+                uls = [x for x in article.sections[root['in_section']]['content'] if x.name == "ul"]
+                if len(uls) < 1:
+                    print("No descendants found.")
+                    continue
+                ul = uls[0]
+                tree = main.ul_to_words(ul)
+                # print(tree)
+                for x in tree:
+                    root['word'].add_child(x)
+            try:
+                word_to_django_word(root['word'], source=article.url)
+            except Exception as e:
+                print(App.logmessage)
+                app.logger.log(f"Fail 4: {e}")
+                continue
+
+        return 0
 
 if __name__ == "__main__":
     #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
