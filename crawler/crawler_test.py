@@ -1,4 +1,4 @@
-from crawler import Word, Article, encode_url, App
+from crawler import Word, Article, encode_url, tag_to_word, App
 from bs4 import BeautifulSoup as Soup
 
 print("===")
@@ -28,11 +28,10 @@ words = [
     Word("supari", "en", "English"),
     Word("*𑀅𑀝𑁆𑀝𑀓𑁆𑀓𑀮𑀸", "inc-ash", romanized="*aṭṭakkalā"),
 ]
-app = App("wordtree/crawler/test_config.json")
 for i in range(len(tags)):
 	tag = tags[i]
 	expected = words[i]
-	actual = app.tag_to_word(tag)
+	actual = tag_to_word(tag)
 	print(f"Checking {expected}:")
 	print(actual.word, end='')
 	if actual.word == expected.word:
@@ -59,7 +58,10 @@ art = Article(url)
 app = App("wordtree/crawler/test_config.json")
 
 for root in art.find_roots():
-	print(root)
-	print(
-		[app.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
-	)
+	lists = [app.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
+	for li in lists:
+		for word in li:
+			root['word'].add_child(word)
+			print(word.tree())
+
+print(root['word'].tree())

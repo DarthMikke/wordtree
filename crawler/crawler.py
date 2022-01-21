@@ -244,18 +244,24 @@ class App:
             language = models.Language.objects.create(short_name=word.language, name=word.language_full)
 
         django_word = None
+        self.logger.log(f"Processing {word}...")
         try:
             django_word = models.Word.objects.get(text=word.word, language=language)
             print(f"{word} exists already")
             self.logger.log(f"{word} not added, exists already.")
         except:
-            django_word = models.Word.objects.create(
-                    text=word.word,
-                    romanized="" if word.romanized is None else word.romanized,
-                    language=language,
-                    parent=models.Word.objects.get(id=1),
-                    source=source)
-            self.logger.log(f"{word} added successfully.")
+            self.logger.log(f"Does not exist yet, attempting to add... ", end='')
+            try:
+                django_word = models.Word.objects.create(
+                        text=word.word,
+                        romanized="" if word.romanized is None else word.romanized,
+                        language=language,
+                        parent=models.Word.objects.get(id=1),
+                        source=source)
+            except:
+                self.logger.log("Failed.")
+            else:
+                self.logger.log(f"OK.")
         
         for child in word.children:
             django_child = self.word_to_django_word(child, source)
@@ -293,16 +299,19 @@ class App:
                     print("No descendants found.")
                     continue
                 ul = uls[0]
-                tree = main.ul_to_words(ul)
+                tree = self.ul_to_words(ul)
                 # print(tree)
                 for x in tree:
                     root['word'].add_child(x)
             try:
+                self.logger.log(f"Adding root word {root['word']}...")
                 self.word_to_django_word(root['word'], source=article.url)
             except Exception as e:
                 print(App.logmessage)
-                self.logger.log(f"Fail 4: {e}")
+                self.logger.log(f"\nFail 4 (failed adding root word): {e}")
                 continue
+            else:
+                self.logger.log(f"Root word {root['word']} processed successfully.")
 
         return
 
