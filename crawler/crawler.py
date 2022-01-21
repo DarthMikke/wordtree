@@ -171,7 +171,7 @@ class App:
     def __init__(self, state_uri):
         self.state_uri = state_uri
         if not os.path.isfile(state_uri):
-            self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/urls-{}.txt", "logfile": "./crawler.log"}
+            self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/crawler/urls-{}.txt", "logfile": "./crawler.log"}
             self.write_state()
 
         with open(state_uri) as fh:
@@ -317,5 +317,5 @@ def encode_url(raw_url):
 if __name__ == "__main__":
     #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
     CONFIG = "wordtree/crawler/crawler_config.json"
-    app = App(config)
+    app = App(CONFIG)
     app.run()
