@@ -39,6 +39,10 @@ class Word:
             raise TypeError("Not a word.")
         if child == self:
             raise ValueError("Can't self-reference.")
+        if child.word is None:
+            for grandchild in child.children:
+                self.children.append(grandchild)
+                return
 
         self.children.append(child)
 
