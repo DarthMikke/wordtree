@@ -1,4 +1,4 @@
-from crawler import Word, Article, encode_url, tag_to_word, Main
+from crawler import Word, Article, encode_url, App
 from bs4 import BeautifulSoup as Soup
 
 print("===")
@@ -28,10 +28,11 @@ words = [
     Word("supari", "en", "English"),
     Word("*𑀅𑀝𑁆𑀝𑀓𑁆𑀓𑀮𑀸", "inc-ash", romanized="*aṭṭakkalā"),
 ]
+app = App("wordtree/crawler/test_config.json")
 for i in range(len(tags)):
 	tag = tags[i]
 	expected = words[i]
-	actual = tag_to_word(tag)
+	actual = app.tag_to_word(tag)
 	print(f"Checking {expected}:")
 	print(actual.word, end='')
 	if actual.word == expected.word:
@@ -55,11 +56,10 @@ print("\n===")
 print("## Test Romanization")
 url = encode_url('https://en.wiktionary.org/wiki/Reconstruction:Ashokan_Prakrit/𑀅𑀝𑁆𑀝𑀓𑁆𑀓𑀮𑀸')
 art = Article(url)
+app = App("wordtree/crawler/test_config.json")
 
 for root in art.find_roots():
 	print(root)
-	main = Main()
 	print(
-		[main.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
+		[app.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
 	)
-

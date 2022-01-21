@@ -213,38 +213,12 @@ class App:
         self.logger.log(f"OK: {url}")
         return article
 
-
-# https://stackoverflow.com/questions/22734464/unicodeencodeerror-ascii-codec-cant-encode-character-xe9-when-using-ur
-def encode_url(raw_url):
-    url = urlparse(raw_url)._asdict()
-    url["path"] = quote(url["path"])
-    return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
-
-
-class Main:
     def ul_to_words(self, ul):
         #print(f"Analyzing ul starting with {ul.text[:40]}")
         words = []
 
         ul = list(ul.find_all("li", recursive=False))
         for li in ul:
-            #span = li.span
-            #if span is None:
-            #    print("This ul doesn't contain a word tree.")
-            #    continue
-            #
-            #if not span.has_attr("class"):
-            #    print("This ul doesn't contain a word tree.")
-            #    continue
-            #
-            #if "desc-arr" in span["class"]:
-            #    span = span.find_next("span", recursive=False)
-            #
-            #if not span.has_attr("lang"):
-            #    print("This ul doesn't contain a word tree.")
-            #    continue
-            #language = span["lang"]
-            #word = Word(span.text, language, span.previous.text)
             word = tag_to_word(li)
 
             child_ul = li.find_all("ul", recursive=False)
@@ -256,7 +230,7 @@ class Main:
                         word.add_child(child_word)
                     except Exception as e:
                         print(App.logmessage)
-                        app.logger.log(f"Fail 1: {e}")
+                        self.logger.log(f"Fail 1: {e}")
 
             words.append(word)
 
@@ -273,7 +247,7 @@ class Main:
         try:
             django_word = models.Word.objects.get(text=word.word, language=language)
             print(f"{word} exists already")
-            self.app.logger.log(f"{word} not added, exists already.")
+            self.logger.log(f"{word} not added, exists already.")
         except:
             django_word = models.Word.objects.create(
                     text=word.word,
@@ -281,7 +255,7 @@ class Main:
                     language=language,
                     parent=models.Word.objects.get(id=1),
                     source=source)
-            self.app.logger.log(f"{word} added successfully.")
+            self.logger.log(f"{word} added successfully.")
         
         for child in word.children:
             django_child = self.word_to_django_word(child, source)
@@ -290,16 +264,13 @@ class Main:
 
         return django_word
 
-    def __init__(self):
-        self.app = App("wordtree/crawler/crawler_config.json")
-
     def run(self, n=10):
         for i in range(n):
             try:
-                article = self.app.load_next_url()
+                article = self.load_next_url()
             except Exception as e:
                 print(App.logmessage)
-                self.app.logger.log(f"Fail 2: {e}")
+                self.logger.log(f"Fail 2: {e}")
                 continue
 
             print(article.title)
@@ -307,12 +278,12 @@ class Main:
                 roots = article.find_roots()
             except Exception as e:
                 print(App.logmessage)
-                self.app.logger.log(f"Fail 3: {e}")
+                self.logger.log(f"Fail 3: {e}")
                 continue
 
             #roots = find_roots(soup) # Word("þaką", "gem-pro")
             if len(roots) == 0:
-                self.app.logger.log("Did not find any roots.")
+                self.logger.log("Did not find any roots.")
                 continue
             for root in roots:
                 print(f"Found root {root['word']}")
@@ -330,12 +301,21 @@ class Main:
                 self.word_to_django_word(root['word'], source=article.url)
             except Exception as e:
                 print(App.logmessage)
-                self.app.logger.log(f"Fail 4: {e}")
+                self.logger.log(f"Fail 4: {e}")
                 continue
 
         return
 
+
+# https://stackoverflow.com/questions/22734464/unicodeencodeerror-ascii-codec-cant-encode-character-xe9-when-using-ur
+def encode_url(raw_url):
+    url = urlparse(raw_url)._asdict()
+    url["path"] = quote(url["path"])
+    return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
+
+
 if __name__ == "__main__":
     #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
-    main = Main()
-    main.run()
+    CONFIG = "wordtree/crawler/crawler_config.json"
+    app = App(config)
+    app.run()
