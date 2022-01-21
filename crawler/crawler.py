@@ -311,7 +311,8 @@ class main:
 
             #roots = find_roots(soup) # Word("þaką", "gem-pro")
             if len(roots) == 0:
-                return -3
+                app.logger.log("Did not find any roots.")
+                continue
             for root in roots:
                 print(f"Found root {root['word']}")
 
@@ -325,14 +326,14 @@ class main:
                 for x in tree:
                     root['word'].add_child(x)
             try:
-                word_to_django_word(root['word'], source=article.url)
+                main.word_to_django_word(root['word'], source=article.url)
             except Exception as e:
                 print(App.logmessage)
                 app.logger.log(f"Fail 4: {e}")
                 continue
 
-        return 0
+        return
 
 if __name__ == "__main__":
     #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
-    exit(main())
+    main()
