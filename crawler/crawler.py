@@ -221,8 +221,8 @@ def encode_url(raw_url):
     return urlunsplit((url["scheme"], url["netloc"], url["path"], url["params"], url["query"]))
 
 
-class main:
-    def ul_to_words(ul):
+class Main:
+    def ul_to_words(self, ul):
         #print(f"Analyzing ul starting with {ul.text[:40]}")
         words = []
 
@@ -251,7 +251,7 @@ class main:
             if len(child_ul) > 0:
                 child_ul = child_ul[0]
                 #ul_to_words(child_ul, word)
-                for child_word in main.ul_to_words(child_ul):
+                for child_word in self.ul_to_words(child_ul):
                     try:
                         word.add_child(child_word)
                     except Exception as e:
@@ -262,8 +262,7 @@ class main:
 
         return words
 
-
-    def word_to_django_word(word: Word, source: str=""):
+    def word_to_django_word(self, word: Word, source: str=""):
         language = None
         try:
             language = models.Language.objects.get(short_name=word.language)
@@ -274,7 +273,7 @@ class main:
         try:
             django_word = models.Word.objects.get(text=word.word, language=language)
             print(f"{word} exists already")
-            app.logger.log(f"{word} not added, exists already.")
+            self.app.logger.log(f"{word} not added, exists already.")
         except:
             django_word = models.Word.objects.create(
                     text=word.word,
@@ -282,23 +281,25 @@ class main:
                     language=language,
                     parent=models.Word.objects.get(id=1),
                     source=source)
-            app.logger.log(f"{word} added successfully.")
+            self.app.logger.log(f"{word} added successfully.")
         
         for child in word.children:
-            django_child = main.word_to_django_word(child, source)
+            django_child = self.word_to_django_word(child, source)
             django_child.parent = django_word
             django_child.save()
 
         return django_word
 
     def __init__(self):
-        app = App("wordtree/crawler/crawler_config.json")
-        for i in range(10):
+        self.app = App("wordtree/crawler/crawler_config.json")
+
+    def run(self, n=10):
+        for i in range(n):
             try:
-                article = app.load_next_url()
+                article = self.app.load_next_url()
             except Exception as e:
                 print(App.logmessage)
-                app.logger.log(f"Fail 2: {e}")
+                self.app.logger.log(f"Fail 2: {e}")
                 continue
 
             print(article.title)
@@ -306,12 +307,12 @@ class main:
                 roots = article.find_roots()
             except Exception as e:
                 print(App.logmessage)
-                app.logger.log(f"Fail 3: {e}")
+                self.app.logger.log(f"Fail 3: {e}")
                 continue
 
             #roots = find_roots(soup) # Word("þaką", "gem-pro")
             if len(roots) == 0:
-                app.logger.log("Did not find any roots.")
+                self.app.logger.log("Did not find any roots.")
                 continue
             for root in roots:
                 print(f"Found root {root['word']}")
@@ -326,14 +327,15 @@ class main:
                 for x in tree:
                     root['word'].add_child(x)
             try:
-                main.word_to_django_word(root['word'], source=article.url)
+                self.word_to_django_word(root['word'], source=article.url)
             except Exception as e:
                 print(App.logmessage)
-                app.logger.log(f"Fail 4: {e}")
+                self.app.logger.log(f"Fail 4: {e}")
                 continue
 
         return
 
 if __name__ == "__main__":
     #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
-    main()
+    main = Main()
+    main.run()
