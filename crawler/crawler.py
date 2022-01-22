@@ -36,13 +36,13 @@ class Word:
     def add_child(self, child):
         print(f"{self} -> {child}")
         if type(child) != type(self):
-            raise TypeError("Not a word.")
+            raise TypeError(f"{child} is not a word.")
         if child == self:
             raise ValueError("Can't self-reference.")
         if child.word is None:
             for grandchild in child.children:
-                self.children.append(grandchild)
-                return
+                self.add_child(grandchild)
+            return
 
         self.children.append(child)
 
@@ -59,7 +59,7 @@ class Word:
 
     def __str__(self):
         word = f"{self.word}"
-        if not(self.romanized == self.word or self.romanized is None):
+        if not (self.romanized == self.word or self.romanized is None):
             word = f"{self.word}/{self.romanized}"
         return f"{word} ({self.language}/{self.language_full})"
 
@@ -102,7 +102,7 @@ class Article:
             j = 0
             found_h3 = False
             seek = True
-            while seek and j<len(section['content']):
+            while seek and j < len(section['content']):
                 cur = section['content'][j]
                 if cur.name == "h3":
                     found_h3 = True
@@ -218,7 +218,7 @@ class App:
         return article
 
     def ul_to_words(self, ul):
-        #print(f"Analyzing ul starting with {ul.text[:40]}")
+        # print(f"Analyzing ul starting with {ul.text[:40]}")
         words = []
 
         ul = list(ul.find_all("li", recursive=False))
@@ -228,7 +228,7 @@ class App:
             child_ul = li.find_all("ul", recursive=False)
             if len(child_ul) > 0:
                 child_ul = child_ul[0]
-                #ul_to_words(child_ul, word)
+                # ul_to_words(child_ul, word)
                 for child_word in self.ul_to_words(child_ul):
                     try:
                         word.add_child(child_word)
@@ -291,7 +291,7 @@ class App:
                 self.logger.log(f"Fail 3: {e}")
                 continue
 
-            #roots = find_roots(soup) # Word("þaką", "gem-pro")
+            # roots = find_roots(soup) # Word("þaką", "gem-pro")
             if len(roots) == 0:
                 self.logger.log("Did not find any roots.")
                 continue
