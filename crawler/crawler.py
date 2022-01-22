@@ -3,6 +3,7 @@ import os
 import sys
 import django
 import json
+import argparse
 
 from urllib.parse import urlsplit, urlunsplit, urlparse, quote
 from urllib.request import urlopen
@@ -36,13 +37,13 @@ class Word:
     def add_child(self, child):
         print(f"{self} -> {child}")
         if type(child) != type(self):
-            raise TypeError("Not a word.")
+            raise TypeError(f"{child} is not a word.")
         if child == self:
             raise ValueError("Can't self-reference.")
         if child.word is None:
             for grandchild in child.children:
-                self.children.append(grandchild)
-                return
+                self.add_child(grandchild)
+            return
 
         self.children.append(child)
 
@@ -59,7 +60,7 @@ class Word:
 
     def __str__(self):
         word = f"{self.word}"
-        if not(self.romanized == self.word or self.romanized is None):
+        if not (self.romanized == self.word or self.romanized is None):
             word = f"{self.word}/{self.romanized}"
         return f"{word} ({self.language}/{self.language_full})"
 
@@ -102,7 +103,7 @@ class Article:
             j = 0
             found_h3 = False
             seek = True
-            while seek and j<len(section['content']):
+            while seek and j < len(section['content']):
                 cur = section['content'][j]
                 if cur.name == "h3":
                     found_h3 = True
@@ -172,34 +173,54 @@ def tag_to_word(tag):
 
 class App:
     logmessage = "Encountered error. Check log file for details."
-    def __init__(self, state_uri):
+
+    def __init__(self, state_uri, url=None, save=False):
         self.state_uri = state_uri
-        if not os.path.isfile(state_uri):
-            self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/crawler/urls-{}.txt", "logfile": "./crawler.log"}
-            self.write_state()
+        if state_uri is not None:
+            if not os.path.isfile(state_uri):
+                self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/crawler/urls-{}.txt",
+                              "logfile": "./crawler.log"}
+                self.write_state()
 
-        with open(state_uri) as fh:
-            state_text = fh.read()
-            self.state = json.loads(state_text)
+        if state_uri is None:
+            self.save = save
+            self.state = {"file_id": 0, "line_no": 0, "file_base": "wordtree/crawler/urls-{}.txt",
+                          "logfile": "./crawler.log"}
+        else:
+            self.save = True
 
-        if not 'logfile' in self.state.keys():
+        if state_uri is not None:
+            with open(state_uri) as fh:
+                state_text = fh.read()
+                self.state = json.loads(state_text)
+
+                self.load_urls()
+        else:
+            self.urls = [url]
+
+        if 'logfile' not in self.state.keys():
             self.state['logfile'] = './crawler.log'
-        
-        self.load_urls()
+
         self.logger = Logger(self.state['logfile'])
-        
+
         self.write_state()
 
     def load_urls(self):
+        if self.state_uri is None:
+            return
         with open(self.state['file_base'].format(self.state['file_id'])) as fh:
             self.urls = [f"https://en.wiktionary.org{url}" for url in fh.read().splitlines()]
 
     def write_state(self):
+        if self.state_uri is None:
+            return
         with open(self.state_uri, "w") as fh:
             fh.write(json.dumps(self.state))
             fh.write("\n")
 
     def next_url(self):
+        if self.state_uri is None:
+            return self.urls[0]
         if self.state['line_no'] >= len(self.urls):
             self.state['file_id'] += 1
             self.state['line_no'] = 0
@@ -218,7 +239,7 @@ class App:
         return article
 
     def ul_to_words(self, ul):
-        #print(f"Analyzing ul starting with {ul.text[:40]}")
+        # print(f"Analyzing ul starting with {ul.text[:40]}")
         words = []
 
         ul = list(ul.find_all("li", recursive=False))
@@ -228,7 +249,7 @@ class App:
             child_ul = li.find_all("ul", recursive=False)
             if len(child_ul) > 0:
                 child_ul = child_ul[0]
-                #ul_to_words(child_ul, word)
+                # ul_to_words(child_ul, word)
                 for child_word in self.ul_to_words(child_ul):
                     try:
                         word.add_child(child_word)
@@ -240,12 +261,15 @@ class App:
 
         return words
 
-    def word_to_django_word(self, word: Word, source: str=""):
+    def word_to_django_word(self, word: Word, source: str = ""):
         language = None
         try:
             language = models.Language.objects.get(short_name=word.language)
-        except:
-            language = models.Language.objects.create(short_name=word.language, name=word.language_full)
+        except models.Language.DoesNotExist:
+            try:
+                language = models.Language.objects.create(short_name=word.language, name=word.language_full)
+            except Exception as e:
+                self.logger.log(f"Fail 6. Could not add {word}: {e}")
 
         django_word = None
         self.logger.log(f"Processing {word}...")
@@ -253,20 +277,20 @@ class App:
             django_word = models.Word.objects.get(text=word.word, language=language)
             print(f"{word} exists already")
             self.logger.log(f"{word} not added, exists already.")
-        except:
+        except models.Word.DoesNotExist:
             self.logger.log(f"Does not exist yet, attempting to add... ", end='')
             try:
                 django_word = models.Word.objects.create(
-                        text=word.word,
-                        romanized="" if word.romanized is None else word.romanized,
-                        language=language,
-                        parent=models.Word.objects.get(id=1),
-                        source=source)
-            except:
-                self.logger.log("Failed.")
+                    text=word.word,
+                    romanized="" if word.romanized is None else word.romanized,
+                    language=language,
+                    parent=models.Word.objects.get(id=1),
+                    source=source)
+            except Exception as e:
+                self.logger.log(f"Failed.\nFail 5. {e}")
             else:
                 self.logger.log(f"OK.")
-        
+
         for child in word.children:
             django_child = self.word_to_django_word(child, source)
             django_child.parent = django_word
@@ -274,7 +298,13 @@ class App:
 
         return django_word
 
-    def run(self, n=10):
+    def run(self, n=None):
+        if n is None:
+            if self.state_uri is None:
+                n = 1
+            else:
+                n = 10
+
         for i in range(n):
             try:
                 article = self.load_next_url()
@@ -291,7 +321,7 @@ class App:
                 self.logger.log(f"Fail 3: {e}")
                 continue
 
-            #roots = find_roots(soup) # Word("þaką", "gem-pro")
+            # roots = find_roots(soup) # Word("þaką", "gem-pro")
             if len(roots) == 0:
                 self.logger.log("Did not find any roots.")
                 continue
@@ -302,19 +332,22 @@ class App:
                 if len(uls) < 1:
                     print("No descendants found.")
                     continue
-                ul = uls[0]
-                tree = self.ul_to_words(ul)
-                # print(tree)
-                for x in tree:
-                    root['word'].add_child(x)
-            try:
+                uls = [self.ul_to_words(x) for x in uls]
+
+                for ul in uls:
+                    for word in ul:
+                        if word.word is None or word.language is None:
+                            continue
+                        root['word'].add_child(word)
                 self.logger.log(f"Adding root word {root['word']}...")
-                self.word_to_django_word(root['word'], source=article.url)
-            except Exception as e:
-                print(App.logmessage)
-                self.logger.log(f"\nFail 4 (failed adding root word): {e}")
-                continue
-            else:
+                print(root['word'].tree())
+                if self.save:
+                    try:
+                        self.word_to_django_word(root['word'], source=article.url)
+                    except Exception as e:
+                        print(App.logmessage)
+                        self.logger.log(f"\nFail 4 (failed adding root word {root['word']}): {e}")
+                        continue
                 self.logger.log(f"Root word {root['word']} processed successfully.")
 
         return
@@ -328,7 +361,28 @@ def encode_url(raw_url):
 
 
 if __name__ == "__main__":
-    #url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
+    parser = argparse.ArgumentParser(description="I read Wiktionary.")
+    parser.add_argument("-s", "--save", help="Save the result.", action='store_true', dest='save')
+    parser.add_argument("-u", help="URL to parse.", required=False, dest='url')
+    args = parser.parse_args()
+
+    # url = "https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką"
+    if args.url is not None:
+        if args.save:
+            print("Warning! The result of this Wiktionary lookup will be saved in the database.")
+        url = args.url
+        if len([y for y in [ord(x) for x in url] if y >= 128]) > 0:
+            url = encode_url(url)
+
+        CONFIG = None
+        app = App(CONFIG, url, args.save)
+        app.run()
+
+        if not args.save:
+            print("This search will not be saved. Run with the '-s' flag to save the result.")
+        exit()
+
     CONFIG = "wordtree/crawler/crawler_config.json"
     app = App(CONFIG)
     app.run()
+    exit()
