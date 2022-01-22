@@ -62,6 +62,20 @@ for root in art.find_roots():
 	for li in lists:
 		for word in li:
 			root['word'].add_child(word)
-			print(word.tree())
+
+print(root['word'].tree())
+
+
+print("\n===")
+print("## Test tree building")
+url = encode_url('https://en.wiktionary.org/wiki/Reconstruction:Proto-Germanic/þaką')
+art = Article(url)
+app = App("wordtree/crawler/test_config.json")
+
+for root in art.find_roots():
+	lists = [app.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
+	for li in lists:
+		for word in li:
+			root['word'].add_child(word)
 
 print(root['word'].tree())
