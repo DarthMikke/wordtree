@@ -73,7 +73,11 @@ art = Article(url)
 app = App("wordtree/crawler/test_config.json")
 
 for root in art.find_roots():
-	lists = [app.ul_to_words(x) for x in art.sections[root['in_section']]['content'] if x.name == "ul"]
+	section = art.sections[root['in_section']]['content']
+	lower = [i for i in range(len(section)) if section[i].text == "Descendants[edit]"][0]
+	section = section[lower+1:]
+
+	lists = [app.ul_to_words(x) for x in section if x.name == "ul"]
 	for li in lists:
 		for word in li:
 			root['word'].add_child(word)

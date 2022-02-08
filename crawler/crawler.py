@@ -328,8 +328,14 @@ class App:
             for root in roots:
                 print(f"Found root {root['word']}")
 
-                uls = [x for x in article.sections[root['in_section']]['content'] if x.name == "ul"]
-                if len(uls) < 1:
+                print("Looking for section 'Descendants'.")
+                section = article.sections[root['in_section']]['content']
+                lower = [i for i in range(len(section)) if section[i].text == "Descendants[edit]"]
+                uls = []
+                if len(lower) > 0:
+                    section = section[lower[0] + 1:]
+                    uls = [x for x in section if x.name == "ul"]
+                if len(lower) < 1 or len(uls) < 1:
                     print("No descendants found.")
                     continue
                 uls = [self.ul_to_words(x) for x in uls]
