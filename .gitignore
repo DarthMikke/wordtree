@@ -2,3 +2,5 @@ __pycache__/
 .DS_Store
 # Crawler config file
 api/crawler_config.json
+*.sqlite*
+*.db
