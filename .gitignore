@@ -1,5 +1,6 @@
 __pycache__/
 .DS_Store
+venv
 # Crawler config file
 api/crawler_config.json
 *.sqlite*
