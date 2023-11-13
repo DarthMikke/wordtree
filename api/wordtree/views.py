@@ -50,32 +50,45 @@ def image(request, word_pks):
 
 
 class WordForm(forms.Form):
-	words = forms.ModelMultipleChoiceField(queryset=Word.objects.exclude(id=1).order_by('text'))
+    words = forms \
+            .ModelMultipleChoiceField(
+                queryset=Word.objects.exclude(id=1).order_by('text')
+            )
 
 
 def index(request):
-	return render(request, 'wordtree/index.html', {'form': WordForm})
+    return render(request, 'wordtree/index.html', {'form': WordForm})
 
 
 def search(request):
-	query = request.GET['query']
-	queryset = Word.objects.filter(text__contains=query).exclude(approved=False).exclude(id=1)
-	suggestions = [{'id': x.id, 'word': x.text, 'latin': '', 'language': x.language.short_name, 'language_full': x.language.name} for x in queryset]
-	return JsonResponse({'suggestions': suggestions})
+    query = request.GET['query']
+    queryset = Word.objects \
+        .filter(text__contains=query) \
+        .exclude(approved=False).exclude(id=1)
+    suggestions = [
+        {
+            'id': x.id,
+            'word': x.text,
+            'latin': '',
+            'language': x.language.short_name,
+            'language_full': x.language.name
+        } for x in queryset
+    ]
+    return JsonResponse({'suggestions': suggestions})
 
 
 def tree(request):
-	"""
-	This view is not used in the React app.
-	"""
-	word_pks = request.META['QUERY_STRING']
-	word_pks = [x.rstrip("&") for x in word_pks.split("words=")]
-	word_pks[-1] = word_pks[-1].split("&")[0]
-	word_pks = [x for x in word_pks if len(x) > 0]
-	print(word_pks)
-	word_pks = [int(x) for x in word_pks if len(x.split("=")) == 1]
-	words = [Word.objects.get(id=x) for x in word_pks]
-	words = [(x.text, x.language.name) for x in words]
-	word_pks = ",".join([str(x) for x in word_pks])
+    """
+    This view is not used in the React app.
+    """
+    word_pks = request.META['QUERY_STRING']
+    word_pks = [x.rstrip("&") for x in word_pks.split("words=")]
+    word_pks[-1] = word_pks[-1].split("&")[0]
+    word_pks = [x for x in word_pks if len(x) > 0]
+    print(word_pks)
+    word_pks = [int(x) for x in word_pks if len(x.split("=")) == 1]
+    words = [Word.objects.get(id=x) for x in word_pks]
+    words = [(x.text, x.language.name) for x in words]
+    word_pks = ",".join([str(x) for x in word_pks])
 
-	return render(request, 'wordtree/tree.html', {'form': WordForm, 'words': words, 'pks': word_pks})
+    return render(request, 'wordtree/tree.html', {'form': WordForm, 'words': words, 'pks': word_pks})
