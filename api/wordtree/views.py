@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from django.shortcuts import render
@@ -5,38 +6,47 @@ from django.http import HttpResponse, JsonResponse
 from django import forms
 from .models import Word
 
+
 # Create your views here.
 def image(request, word_pks):
-	word_pks = [int(x) for x in word_pks.split(",")]
+    (_, file_format) = os.path.splitext(request.get_full_path())
+    file_format = file_format[1:]
+    word_pks = [int(x) for x in word_pks.split(",")]
 
-	lines = ["digraph {"]
-	words = []
+    lines = ["digraph {"]
+    words = []
 
-	for word_pk in word_pks:
-		word = Word.objects.get(id=word_pk)
-		print(word)
-		children = Word.objects.filter(parent=word)
-		for child in children:
-			words.append(child)
+    for word_pk in word_pks:
+        word = Word.objects.get(id=word_pk)
+        print(word)
+        children = Word.objects.filter(parent=word)
+        for child in children:
+            words.append(child)
 
-		while word.id != 1:
-			if len([x for x in words if x.id == word.id]) == 0:
-				words.append(word)
-			word = word.parent
-			print(word)
+        while word.id != 1:
+            if len([x for x in words if x.id == word.id]) == 0:
+                words.append(word)
+            word = word.parent
+            print(word)
 
-	lines += [f"""W{x.id} [label=<{x.text}<BR/>({x.language.name})>]""" for x in words]
-	lines += [f"W{x.parent.id} -> W{x.id}" for x in words if x.parent.id != 1]
-	lines += ["}"]
+    lines += [f"""W{x.id} [label=<{x.text}<BR/>({x.language.name})>]"""
+              for x in words]
+    lines += [f"W{x.parent.id} -> W{x.id}" for x in words if x.parent.id != 1]
+    lines += ["}"]
 
-	process = subprocess.run(
-		["dot", "-Tpng"],
-		input="\n".join(lines).encode("utf-8"),
-		capture_output=True)
-	if process.stderr != b'':
-		print(process.stderr)
+    print("\n".join(lines))
 
-	return HttpResponse(process.stdout, content_type="image/png")
+    process = subprocess.run(
+        ["dot", f"-T{file_format}", "-Gsize=900,1500!", "-Gdpi=100"],
+        input="\n".join(lines).encode("utf-8"),
+        capture_output=True)
+    if process.stderr != b'':
+        print(process.stderr.decode())
+
+    output = process.stdout.decode() if file_format == "svg" \
+        else process.stdout
+
+    return HttpResponse(output, content_type=f"image/{file_format}")
 
 
 class WordForm(forms.Form):
