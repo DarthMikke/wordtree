@@ -1,0 +1,13 @@
+@import 'extends';
+
+.button {
+  @extend %button_inner;
+  @extend %button_outer;
+
+  display: inline;
+  margin: 2px;
+
+  @include buttonMixin("primary");
+  @include buttonMixin("secondary");
+  @include buttonMixin("destructive");
+}

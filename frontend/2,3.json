@@ -1,0 +1,30 @@
+{
+	"data":
+	[
+		{
+			"id": 3,
+			"word": "*ain",
+			"language": "Proto-West-Germanic",
+			"parent": 2
+		},
+		{
+			"id": 9,
+			"word": "einn",
+			"language": "Old Norse",
+			"parent": 2
+		},
+		{
+			"id": 2,
+			"word": "*ainaz",
+			"language": "Proto-Germanic",
+			"parent": null
+		},
+		{
+			"id": 4,
+			"word": "\xc4\x81n",
+			"language": "Old English",
+			"parent": 3
+		},
+
+	]
+}

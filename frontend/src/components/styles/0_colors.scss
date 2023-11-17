@@ -1,0 +1,54 @@
+
+:root {
+  --body-bg-color-1: #242424;
+  --body-bg-color-2: #282828;
+  --body-bg-color-3: #484848;
+
+  /** Don't edit below fields */
+
+  --body-fg-color: rgba(255, 255, 255, 0.87);
+  --body-bg-color: var(--body-bg-color-1);
+
+  --link-color: #646cff;
+  --link-hover-color: #535bf2;
+
+  --primary-button-background-color: #535bf2;
+  --primary-button-border-color: #535bf2;
+  --primary-button-color: #ffffff;
+  --primary-button-background-color-hover: #7076ec;
+  --primary-button-border-color-hover: #535bf2;
+  --primary-button-color-hover: #ffffff;
+
+  --secondary-button-background-color: #242424;
+  --secondary-button-border-color: #535bf2;
+  --secondary-button-color: #535bf2;
+  --secondary-button-background-color-hover: #484848;
+  --secondary-button-border-color-hover: #7076ec;
+  --secondary-button-color-hover: #7076ec;
+
+
+  --destructive-button-background-color: #ee4242;
+  --destructive-button-border-color: #ee4242;
+  --destructive-button-color: #ffffff;
+  --destructive-button-background-color-hover: #f07171;
+  --destructive-button-border-color-hover: #ee4242;
+  --destructive-button-color-hover: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --body-bg-color-1: #ffffff;
+    --body-bg-color-2: #f9fbfc;
+    --body-bg-color-3: #e9f2f9;
+    --body-fg-color: #213547;
+
+    --link-hover-color: #747bff;
+
+    --secondary-button-background-color: #ffffff;
+    --secondary-button-border-color: #535bf2;
+    --secondary-button-color: #535bf2;
+    --secondary-button-background-color-hover: #eeeeee;
+    --secondary-button-border-color-hover: #7076ec;
+    --secondary-button-color-hover: #7076ec;
+  }
+}

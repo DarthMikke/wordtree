@@ -1,0 +1,9 @@
+digraph {
+W3 [label=<*ain<BR/>(Proto-West-Germanic)>]
+W9 [label=<einn<BR/>(Old Norse)>]
+W2 [label=<*ainaz<BR/>(Proto-Germanic)>]
+W4 [label=<\xc4\x81n<BR/>(Old English)>]
+W2 -> W3
+W2 -> W9
+W3 -> W4
+}

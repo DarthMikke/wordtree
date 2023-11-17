@@ -1,0 +1,26 @@
+
+.pane {
+  padding: 16px;
+  //width: ;
+  flex-basis: max-content;
+  border-right: 1px solid rgba(122, 122, 122, 0.1);
+  
+  height: 100%;
+
+  &:first-child {
+    @media screen and (min-width: 1281px) {
+      width: calc((100vw - 1280px) / 2 + 320px);
+      padding-left: calc((100vw - 1280px) / 2);
+    }
+  }
+
+  &:last-child {
+    flex-grow: 1;
+    border-right: none;
+
+    @media screen and (min-width: 1281px) {
+      width: calc((100vw - 1280px) / 2 + 960px);
+      padding-right: calc((100vw - 1280px) / 2);
+    }
+  }
+}

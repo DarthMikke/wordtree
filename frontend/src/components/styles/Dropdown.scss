@@ -1,0 +1,82 @@
+@import 'extends';
+
+.dropdown {
+  &-toggle {
+    position: relative;
+
+    &::after {
+      content: "";
+      opacity: 1;
+      position: relative;
+      margin-left: 8px;
+      top: 2px;
+      transform: rotateX(180deg);
+      transition: all 0.3s ease-out;
+
+      border: 5px solid transparent;
+
+      border-bottom-color: var(--color, #000);
+
+      display: inline-block;
+      width: 0px;
+      height: 0px;
+    }
+
+    &.open::after {
+      transform: rotateX(0deg);
+      top: -2px;
+    }
+  }
+
+  .primary &__list {
+    border-color: var(--primary-button-border-color);
+  }
+  .secondary &__list {
+    border-color: var(--secondary-button-border-color);
+  }
+  .destructive &__list {
+    border-color: var(--destructive-button-border-color);
+  }
+
+  &__list {
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease-out;
+
+    button.open & {
+      opacity: 1;
+      pointer-events: all;
+    }
+    position: absolute;
+    list-style: none;
+
+    margin-block: 0;
+    margin-inline: 0;
+    padding-block: 0;
+    padding-inline: 0;
+    right: 0;
+    top: 38px;
+
+    width: max-content;
+
+    @extend %button_outer;
+    border-width: 1px;
+    border-style: solid;
+    overflow: clip;
+
+    button {
+      margin: 0;
+    }
+  }
+
+  &__item {
+    display: block;
+    min-width: max-content;
+
+    button.button {
+      border-radius: 0;
+      width: 100%;
+      border: 0;
+    }
+  }
+}
